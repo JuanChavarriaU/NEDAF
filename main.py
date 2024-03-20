@@ -23,8 +23,8 @@ class MainWindow(QMainWindow):
 
         #crear el QTabWidget
         self.tabs = QTabWidget()
-        self.tabs.setTabPosition(QTabWidget.TabPosition.South)
-        self.tabs.setMovable(True)
+        self.tabs.setTabPosition(QTabWidget.TabPosition.South) 
+        #self.tabs.setMovable(True) # puedes mover las pestañas
         self.setCentralWidget(self.tabs)
         
         #agregar pestañas
@@ -45,8 +45,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.explorar_tab, "Exportar Datos")
 
 
-        
-        
+                
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main_window = MainWindow()
