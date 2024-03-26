@@ -2,25 +2,39 @@ import sys
 from PyQt6.QtWidgets import (
     QTabWidget,
     QMainWindow,
-    QApplication
+    QApplication, 
+    QVBoxLayout, 
+    QMessageBox
+
 )
+from PyQt6.QtGui import QAction
 from Model.ImportData import ImportData
 from Model.TransformationData import TransformationData
 from Model.ExportData import ExportData 
+from View.clusterLogin import ClusterLogin
 from ViewModel.ExploreData import ExploreData
 from ViewModel.LLMInsights import LLMInsights
 from ViewModel.NetworkVisualization import NetworkVisualization 
 from ViewModel.StatisticalAnalysis import StatisticalAnalysis
+
 
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.initUI()
 
+        
     def initUI(self):
         self.setWindowTitle("NEDAF: Network Data Analysis Framework")
         self.setGeometry(100,100,800,600)
-
+        self.tabs_init()
+        self.ClusterOptionAction()
+        
+        
+    def tabs_init(self):
+        #main layout
+        main_layout = QVBoxLayout()
+        
         #crear el QTabWidget
         self.tabs = QTabWidget()
         self.tabs.setTabPosition(QTabWidget.TabPosition.South) 
@@ -43,11 +57,32 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.analisis_tab, "Analisis de Datos")
         self.tabs.addTab(self.LLM_tab, "LLM Insight")
         self.tabs.addTab(self.explorar_tab, "Exportar Datos")
+  
 
+    def ClusterOptionAction(self):
+         #creacion de QAction en el menuBar   
+        menubar = self.menuBar()
+        file_menu = menubar.addMenu("Options")
+        cluster_login_action = QAction("Conexión a Cluster", self)
+        cluster_login_action.triggered.connect(self.showClusterLogin)
+        file_menu.addAction(cluster_login_action)
 
+    def showClusterLogin(self):
+        try:
+            self.clusterLogin = ClusterLogin()
+            if self.clusterLogin.exec() == ClusterLogin.accepted:
+                self.clusterLogin.connect_cluster()
+        except Exception as e:
+             QMessageBox.critical(self, "Error", f"Failed to connect: {str(e)}")  
+            
                 
-if __name__ == '__main__':
+def main():
     app = QApplication(sys.argv)
     main_window = MainWindow()
     main_window.show()
     sys.exit(app.exec())
+
+
+if __name__ == '__main__':
+    main()
+

@@ -1,12 +1,15 @@
 from PyQt6.QtWidgets import (QMessageBox, QPushButton, 
                              QFileDialog, QVBoxLayout, QWidget, 
-                             QGridLayout, QLabel, QHBoxLayout,
-                             QTableWidget, QTableWidgetItem)
+                            QLabel, QTableWidget, QTableWidgetItem, 
+                            QTabWidget)
 from PyQt6.QtCore import QStandardPaths
+
+from View.FileExplorer import FileExplorerWidget
 import dask.dataframe as dd
 import pandas as pd
 
-class ImportData(QWidget): 
+
+class ImportData(QWidget):
 
    def __init__(self):
         super().__init__()
@@ -15,7 +18,8 @@ class ImportData(QWidget):
    def initUI(self):
      #layout principal
       Import_layout = QVBoxLayout()
-      
+      #layout para el explorador de archivos
+      self.FileExplorer()
       #Titulo
       title = QLabel("Importar Datos")
       title.setStyleSheet("font-weight: bold; font-size: 16px;")
@@ -34,9 +38,16 @@ class ImportData(QWidget):
       self.data_table = QTableWidget()
       self.data_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers) # read only
       Import_layout.addWidget(self.data_table)
-      
+      Import_layout.addWidget(self.tabExplorer)
       self.setLayout(Import_layout)
 
+   def FileExplorer(self):
+        self.tabExplorer = QTabWidget()
+        self.fileExplorer = FileExplorerWidget()
+        self.tabExplorer.addTab(self.fileExplorer, "File Explorer")
+        self.tabExplorer.setTabPosition(QTabWidget.TabPosition.West)  
+   
+  
    def LoadData(self):
       #definir opciones
       options = (QFileDialog.Option.DontUseNativeDialog)
@@ -57,15 +68,8 @@ class ImportData(QWidget):
             self.fill_data_table(df)
             return df
       except Exception as e:
-            self.ErrorMessage(e)
+            QMessageBox.critical(self, "Error", f"Ha ocurrido un error: {str(e)}")
    
-   def ErrorMessage(self, e : Exception):
-      buttonErrordialog = QMessageBox(self)
-      buttonErrordialog.setWindowTitle("Error!")
-      buttonErrordialog.setText(f'Ha ocurrido un error {e}')
-      button = buttonErrordialog.exec()
-      button = QMessageBox.StandardButton(button)
-
    def fill_data_table(self, df):
        #vista previa del df
       preview_data = df.head().values
@@ -73,10 +77,12 @@ class ImportData(QWidget):
       #config # of rows and columns
       self.data_table.setRowCount(len(preview_data))
       self.data_table.setColumnCount(len(preview_data[0]))
-
-
       #fill table
       for row in range(len(preview_data)):
           for column in range (len(preview_data[0])):
               item = QTableWidgetItem(str(preview_data[row][column]))
               self.data_table.setItem(row, column, item)
+
+   
+
+        
