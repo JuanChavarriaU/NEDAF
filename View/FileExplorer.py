@@ -1,7 +1,8 @@
 import stat
 from PyQt6.QtWidgets import QWidget, QTreeView, QVBoxLayout
 from PyQt6.QtGui import QFileSystemModel
-from PyQt6.QtCore import QObject, Qt, QAbstractItemModel, QModelIndex
+from PyQt6.QtCore import QAbstractItemModel, Qt, QModelIndex
+
 import paramiko
 class FileExplorerWidget(QWidget):
     def __init__(self):
@@ -35,40 +36,80 @@ class FileExplorerWidget(QWidget):
         print("Double-clicked file:", file_path)
         # Here you can implement actions like opening files or navigating into directories
 
-class SSHFileSystemModel(QAbstractItemModel): #necesitamos conectar a un servidor ssh, problemas con el stfp
-    def __init__(self, host, user, password):
-        super().__init__()
-
+class SSHFileSystemModel(QWidget): #problemas al sobreescribir el file explorer 
+    def __init__(self):
+        super().__init__()   
+        
+       
+        #NECESITAMOS LOGRAR QUE SE ACTUALIZE LA VISTA EN IMPORTDATA.PY teoricamente el treeview se ve, sin embargo no se coloca la vista en el tab 
+    def RemoteFileExplorer(self, host, user, password):
+        
+        self.layout = QVBoxLayout()
+        
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh.connect(hostname=host, username=user, password=password) 
-
-        self.stfp = self.ssh.open_sftp()
-        self.root = ["/", self.get_children("/")]
-
-    def get_children(self, path):
-        with self.sftp.chdir(path):
-            return [(entry.filename, self.get_children(entry.filename)) for entry in self.sftp.listdir_attr() if stat.S_ISDIR(entry.st_mode)]
         
-    def rowCount(self, parent=QModelIndex()):
-        if parent.isValid():
-            return len(parent.internalPointer()[1])
-        else:
-            return len(self.root[1])
+        self.stfp = self.ssh.open_sftp()
+        
+        self.stfp.chdir('/home/'+user)
+        directory_contents = self.stfp.listdir_attr('.')
+        self.tree = QTreeView(self)
+        self.file_model = RemoteFileSystemModel()
+        self.tree.setModel(self.file_model)
+        self.file_model.setDirectoryContents(directory_contents)
+        
+        self.layout.addWidget(self.tree)
+        self.setLayout(self.layout)
+        
 
-    def columnCount(self, parent=QModelIndex()):
+class RemoteFileSystemModel(QAbstractItemModel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.rootItem = None
+        self.directory_contents = []
+
+    def setDirectoryContents(self, directory_contents):
+        self.beginResetModel()
+        self.directory_contents = directory_contents
+        self.endResetModel()
+
+    def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
+        if parent.isValid():
+            return 0
+        return len(self.directory_contents)
+
+    def columnCount(self, parent: QModelIndex = QModelIndex()) -> int:
         return 1
 
-    def index(self, row, column, parent=QModelIndex()):
-        if parent.isValid():
-            data = parent.internalPointer()[1][row]
-        else:
-            data = self.root[1][row]
-        return self.createIndex(row, column, data)
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole):
+        if not index.isValid():
+            return None
 
-    def parent(self, index):
-        return QModelIndex()  # This needs to be implemented
-
-    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if role == Qt.ItemDataRole.DisplayRole:
-            return index.internalPointer()[0]       
+            fileInfo = self.directory_contents[index.row()]
+            return fileInfo.filename
+
+        return None
+
+    def index(self, row: int, column: int, parent: QModelIndex = QModelIndex()) -> QModelIndex:
+        if not self.hasIndex(row, column, parent):
+            return QModelIndex()
+
+        if not parent.isValid():
+            parentItem = self.rootItem
+        else:
+            parentItem = parent.internalPointer()
+
+        if row < len(self.directory_contents):
+            return self.createIndex(row, column, self.directory_contents[row])
+
+        return QModelIndex()
+
+    def parent(self, index: QModelIndex = QModelIndex()) -> QModelIndex:
+        return QModelIndex()
+
+    def flags(self, index: QModelIndex) -> Qt.ItemFlag:
+        if not index.isValid():
+            return Qt.ItemFlag.NoItemFlags
+        return Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable

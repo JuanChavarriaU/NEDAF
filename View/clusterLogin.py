@@ -1,10 +1,10 @@
 #clase realizada para conectarse al cluster a nivel de aplicacion 
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QLabel, 
-                             QLineEdit, QPushButton, QMessageBox)
+                             QLineEdit, QPushButton, QMessageBox, QTabWidget)
 from PyQt6.QtCore import Qt
 import paramiko as pk
+
 from Model.ImportData import ImportData
-from View.FileExplorer import SSHFileSystemModel, FileExplorerWidget
 class ClusterLogin(QDialog):
    
     def __init__(self):
@@ -60,9 +60,9 @@ class ClusterLogin(QDialog):
             ssh_client.set_missing_host_key_policy(pk.AutoAddPolicy())
             ssh_client.connect(hostname=host, username=user, password=password)
             self.accept()
-            QMessageBox.information(self, "Exito", "Conexión SSH establecida satisfactoriamente!")
-            print(host, user, password)
-            SSHFileSystemModel(host, user, password)
+            QMessageBox.information(self, "Exito", "Conexión SSH establecida satisfactoriamente!")          
+            importData = ImportData()
+            importData.FileExplorer(host, user, password)
             ssh_client.close()
             
         except Exception as e:
@@ -70,4 +70,4 @@ class ClusterLogin(QDialog):
 
     
               
-                  
+   

@@ -9,13 +9,14 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QAction
 from Model.ImportData import ImportData
-from Model.TransformationData import TransformationData
+from Model.TransformationData import TransformationDataWindow
 from Model.ExportData import ExportData 
 from View.clusterLogin import ClusterLogin
 from ViewModel.ExploreData import ExploreData
 from ViewModel.LLMInsights import LLMInsights
 from ViewModel.NetworkVisualization import NetworkVisualization 
 from ViewModel.StatisticalAnalysis import StatisticalAnalysis
+from View.DataManager import DataManager
 
 
 class MainWindow(QMainWindow):
@@ -27,13 +28,13 @@ class MainWindow(QMainWindow):
     def initUI(self):
         self.setWindowTitle("NEDAF: Network Data Analysis Framework")
         self.setGeometry(100,100,800,600)
+        self.data_manager = DataManager()
         self.tabs_init()
         self.ClusterOptionAction()
         
         
     def tabs_init(self):
         #main layout
-        main_layout = QVBoxLayout()
         
         #crear el QTabWidget
         self.tabs = QTabWidget()
@@ -42,9 +43,9 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tabs)
         
         #agregar pestañas
-        self.importar_tab = ImportData()
-        self.transformar_tab  = TransformationData()
-        self.explorar_tab = ExploreData()
+        self.importar_tab = ImportData(self.data_manager)
+        self.transformar_tab  = TransformationDataWindow(self.data_manager)
+        self.explorar_tab = ExploreData(self.data_manager)
         self.visualizacion_tab = NetworkVisualization()
         self.analisis_tab = StatisticalAnalysis()
         self.LLM_tab = LLMInsights()
@@ -56,7 +57,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.visualizacion_tab, "Visualización de Datos")
         self.tabs.addTab(self.analisis_tab, "Analisis de Datos")
         self.tabs.addTab(self.LLM_tab, "LLM Insight")
-        self.tabs.addTab(self.explorar_tab, "Exportar Datos")
+        self.tabs.addTab(self.exportar_tab, "Exportar Datos")
   
 
     def ClusterOptionAction(self):
