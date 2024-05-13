@@ -6,6 +6,7 @@ from ViewModel.exploreData import exploreData
 import pandas as pd
 import numpy as np
 class ExploreData(QWidget):
+    
     def __init__(self, data_manager: DataManager):
         super().__init__()
         self.i = 0
