@@ -43,7 +43,6 @@ class TransformationDataWindow(QWidget):
     def enable_ui_elements(self, option: bool):
         """Habilitar elementos de la interfaz cuando se cargue el DataFrame."""
         # Cambiar mensaje de estado
-        print("LA SEÑAL FUE EMITIDA")
         self.status_label.setText("Datos cargados")
         # Habilitar botón de aplicar transformaciones
         self.apply_button.setEnabled(option)
@@ -62,10 +61,10 @@ class TransformationDataWindow(QWidget):
         if self.checkbox_normalize.isChecked():
                 self.transformation_data.normalize_data()
                 tranformations.append("Datos normalizados")
-        # transformation data, if we operate the dataframe, show it modified and updated with the set_data method of the  data manager class  
+        #transformation data, if we operate the dataframe, show it modified and updated with the set_data method of the data manager class  
         #simulacion de aplicar las transformaciones y actualizar vista de datos
         transformed_data = "Datos transformados:\n\n" + "\n".join(tranformations)
         self.data_view.setPlainText(transformed_data)
-     
+        self.data_manager.set_data(self.transformation_data.get_data())
       
 

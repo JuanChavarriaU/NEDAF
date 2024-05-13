@@ -1,153 +1,243 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QComboBox, 
-                            QLabel, QPushButton, QStackedWidget)
+                            QLabel, QMessageBox, QStackedLayout)
+from PyQt6 import QtWidgets
 from View.DataManager import DataManager    
 from ViewModel.exploreData import exploreData
-
+import pandas as pd
+import numpy as np
 class ExploreData(QWidget):
     def __init__(self, data_manager: DataManager):
         super().__init__()
+        self.i = 0
         self.data_manager = data_manager
         self.data_manager.data_loaded.connect(self.on_data_loaded) # no se habilitan las tablas una vez que los datos estan cargados 
+        self.operation_to_function_map = {
+            "Resumen estadístico": self.create_summary_tab,
+            "Promedio": self.create_mean_tab,
+            "Mediana": self.create_median_tab,
+            "Varianza": self.create_variance_tab,
+            "Covarianza": self.create_covariance_tab,
+            "Correlación": self.create_correlation_tab,
+            "Distribución": self.create_distribution_tab,
+            "Desviación estándar": self.create_standard_deviation_tab,
+            "Min y Max": self.create_min_max_tab,
+            "Cantidad de valores únicos": self.create_unique_values_tab,
+            "Cantidad de valores faltantes": self.create_missing_values_tab
+        } 
+        
         self.initUI()
 
     def initUI(self):
       """ Inicializa la interfaz de usuario."""
-      self.column_dropdown = QComboBox()
-      
-      self.column_dropdown.currentIndexChanged.connect(self.on_column_changed)
-      self.stacked_widget = QStackedWidget()
-
+      self.columns_dropdown = QComboBox()
       self.operation_dropdown = QComboBox()
-      self.operation_dropdown.currentIndexChanged.connect(self.on_dropdown_changed)
-      self.layout = QVBoxLayout()
-      self.layout.addWidget(self.column_dropdown)
-      self.layout.addWidget(self.operation_dropdown)
-      self.layout.addWidget(self.stacked_widget)
+      self.stacked_Layout = QStackedLayout()
 
-      self.create_summary_tab()
-      self.create_distribution_tab()
-      self.create_correlation_tab()
+      self.columns_dropdown.activated.connect(self.on_column_changed)
+      
+      self.operation_dropdown.activated.connect(self.on_operation_changed)
+
+      self.layout = QVBoxLayout()
+      self.layout.addWidget(self.columns_dropdown)
+      self.layout.addWidget(self.operation_dropdown)
+      self.layout.addLayout(self.stacked_Layout)
 
       self.setLayout(self.layout)
-
-      self.disable_enable_tables(False)  
-
-    def create_summary_tab(self):
-        """Crea la pestaña de resumen."""
-        self.summary_tab = QWidget()
-        self.summary_layout = QVBoxLayout()
-        self.summary_table = QTableWidget()
-        self.summary_layout.addWidget(self.summary_table)
-        self.summary_tab.setLayout(self.summary_layout)
-        self.operation_dropdown.addItem("Resumen estadístico", self.summary_tab)
-        self.stacked_widget.addWidget(self.summary_tab) 
-
-    def create_distribution_tab(self):
-        """Crea la pestaña de distribución."""
-        self.distribution_tab = QWidget()
-        self.distribution_layout = QVBoxLayout()
-        self.distribution_table = QTableWidget()
-        self.distribution_layout.addWidget(self.distribution_table)
-        self.distribution_tab.setLayout(self.distribution_layout)
-        self.operation_dropdown.addItem("Distribución", self.distribution_tab)
-        self.stacked_widget.addWidget(self.distribution_tab)
-
-    def create_correlation_tab(self):
-        """Crea la pestaña de correlación."""
-        self.correlation_tab = QWidget()
-        self.correlation_layout = QVBoxLayout()
-        self.correlation_table = QTableWidget()
-        self.correlation_layout.addWidget(self.correlation_table)
-        self.correlation_tab.setLayout(self.correlation_layout)
-        self.operation_dropdown.addItem("Correlación", self.correlation_tab)
-        self.stacked_widget.addWidget(self.correlation_tab)
-
-    def on_dropdown_changed(self, index: int):
-        selected_widget = self.operation_dropdown.currentData()
-        self.stacked_widget.setCurrentWidget(selected_widget)
     
-    def get_numeric_columns(self):
-        """Devuelve las columnas numéricas del DataFrame."""
-        return self.data_manager.get_data().select_dtypes(include=['number']).columns
+    def create_tab(self):
+        self.i += 1
+        print(f"Llamada a create_tab #{self.i}") 
+        """Crea pestaña."""
+        tab = QWidget()
+        layout = QVBoxLayout()
+        table = QTableWidget()
+        layout.addWidget(table)
+        tab.setLayout(layout)
+        self.stacked_Layout.addWidget(tab)
         
-    def on_column_changed(self, index: int):
-        selected_column = self.column_dropdown.currentText()
-        if selected_column in self.get_numeric_columns():
+        print("Final de llamada #", self.i)
+        return tab, table 
+
+    def create_summary_tab(self, selected_column: str):
+        """Crea la pestaña de resumen."""
+        print("OYE PERO ESTOY EN CREATE SUMMARY TAB")
+        self.summary_tab , self.summary_table = self.create_tab()
+        self.fill_table_with_summary(self.summary_table, self.get_data(), selected_column)
+        self.add_and_show_widget(self.summary_tab)  
+
+    def create_distribution_tab(self, selected_column: str):
+        """Crea la pestaña de distribución."""
+        self.distribution_tab, self.distribution_table = self.create_tab()
+        self.fill_table_with_distribution(self.distribution_table, self.get_data(), selected_column)        
+        #self.stacked_Layout.addWidget(self.distribution_tab)
+        self.add_and_show_widget(self.distribution_tab)  
+
+    def create_correlation_tab(self, selected_column: str):
+        """Crea la pestaña de correlación."""
+        self.correlation_tab, self.correlation_table = self.create_tab()
+        self.fill_table_with_correlation(self.correlation_table, self.get_data(), selected_column)
+        #self.stacked_Layout.addWidget(self.correlation_tab)
+        self.add_and_show_widget(self.correlation_tab)  
+    
+    def create_mean_tab(self, selected_column: str):
+        """Crea la pestaña de promedio."""
+        self.mean_tab, self.mean_table = self.create_tab()
+        print(f"Creo la pestaña y llamo a fill table mean y añado el widget al stack ")
+        self.fill_table_with_mean(self.mean_table, self.get_data(), selected_column)
+        #self.stacked_Layout.addWidget(self.mean_tab)
+        self.add_and_show_widget(self.mean_tab)  
+    
+    def create_median_tab(self, selected_column: str):
+        """Crea la pestaña de mediana."""
+        self.median_tab, self.median_table = self.create_tab()
+        self.fill_table_with_median(self.median_table, self.get_data(), selected_column)
+        #self.stacked_Layout.addWidget(self.median_tab)
+        self.add_and_show_widget(self.median_tab)  
+    
+    def create_variance_tab(self, selected_column: str):
+        """Crea la pestaña de varianza."""
+        self.variance_tab, self.variance_table = self.create_tab()
+        self.fill_table_with_variance(self.variance_table, self.get_data(), selected_column)
+        #self.stacked_Layout.addWidget(self.variance_tab)
+        self.add_and_show_widget(self.variance_tab)  
+    
+    def create_covariance_tab(self, selected_column: str):
+        """Crea la pestaña de covarianza."""
+        self.covariance_tab, self.covariance_table = self.create_tab()
+        self.fill_table_with_covariance(self.covariance_table, self.get_data(), selected_column)
+        self.add_and_show_widget(self.covariance_tab)
+    
+    def create_standard_deviation_tab(self, selected_column: str):
+        """Crea la pestaña de desviación estándar."""
+        self.standard_deviation_tab, self.standard_deviation_table = self.create_tab()
+        self.fill_table_with_standard_deviation(self.standard_deviation_table, self.get_data(), selected_column)
+        self.add_and_show_widget(self.standard_deviation_tab)
+        
+    def create_min_max_tab(self, selected_column: str):
+        """Crea la pestaña de min y max."""
+        self.min_max_tab, self.min_max_table = self.create_tab()
+        self.fill_table_with_min_max(self.min_max_table, self.get_data(), selected_column)
+        self.add_and_show_widget(self.min_max_tab)
+        
+    def create_unique_values_tab(self, selected_column: str):
+        """Crea la pestaña de valores únicos."""
+        self.unique_values_tab, self.unique_values_table = self.create_tab()
+        self.fill_table_with_unique_values(self.unique_values_table, self.get_data(), selected_column)
+        self.add_and_show_widget(self.unique_values_tab)
+        
+    def create_missing_values_tab(self, selected_column: str):
+        """Crea la pestaña de valores faltantes."""
+        self.missing_values_tab, self.missing_values_table = self.create_tab()
+        self.fill_table_with_missing_values(self.missing_values_table, self.get_data(), selected_column)
+        self.add_and_show_widget(self.missing_values_tab)
+
+    def on_operation_changed(self, index: int):
+        """Manejador para el cambio de operación seleccionado en el `operation_dropdown`.
+           Establece el índice actual del `QStackedWidget` al índice seleccionado en `operation_dropdown
+        """
+        try:  
+            selected_column = self.columns_dropdown.currentText()
+            selected_operation = self.operation_dropdown.currentText()
+           
+            if selected_operation in self.operation_to_function_map:
+                
+                self.operation_to_function_map[selected_operation](selected_column)
+            else:
+                QMessageBox.critical(self, "Error", f"Operación no soportada") 
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error cambiando la operación {str(e)}") 
+            
+    def get_numeric_columns(self) -> list[str]:
+        """Devuelve las columnas numéricas del DataFrame."""
+        return self.data_manager.get_data().select_dtypes(include=['int64', 'float64']).columns.tolist()
+    
+    def add_and_show_widget(self, widget: QWidget):
+        self.stacked_Layout.addWidget(widget)
+        self.stacked_Layout.setCurrentIndex(self.stacked_Layout.count() - 1)
+    
+    def on_column_changed(self, index: int) -> None:
+        """Manejador para el cambio de columna seleccionada en el `columns_dropdown`"""	
+        selected_column = self.columns_dropdown.currentText()
+        print("(OnColumnChanged) Selected Column: ", selected_column)
+        
+        data = self.get_data().data
+        numeric_columns = data.select_dtypes(include=np.number).columns
+
+        self.stacked_Layout.setCurrentIndex(index)
+
+        if self.get_data().isNumeric(selected_column) and len(data.columns) == len(numeric_columns):
             self.operation_dropdown.clear()
-            self.operation_dropdown.addItems(["Resumen estadístico", "Promedio", "Mediana", "Varianza", "Covarianza", "Correlación", "Distribución", "Desviación estándar", "Min y Max", "Valores únicos", "Número de valores faltantes", "Valores faltantes"])
+            self.operation_dropdown.addItems(["Resumen estadístico", "Promedio", "Mediana", "Varianza", "Covarianza", "Correlación", "Distribución", "Desviación estándar", "Min y Max", "Cantidad de valores únicos", "Cantidad de valores faltantes"])
+        elif self.get_data().isNumeric(selected_column):
+            self.operation_dropdown.clear()
+            self.operation_dropdown.addItems(["Resumen estadístico", "Promedio", "Mediana", "Varianza","Desviación estándar", "Min y Max", "Cantidad de valores únicos", "Cantidad de valores faltantes"])     
         else:
             self.operation_dropdown.clear()
-            self.operation_dropdown.addItems(["Valores únicos", "Número de valores faltantes", "Valores faltantes"])
+            self.operation_dropdown.addItems(["Distribución", "Cantidad de valores únicos", "Cantidad de valores faltantes"])
     
-    def disable_enable_tables(self, option: bool):
-        """Deshabilita o habilita todas las tablas al inicio."""
-        self.summary_table.setEnabled(option)
-        self.distribution_table.setEnabled(option)
-        self.correlation_table.setEnabled(option)
-
-
-    def on_data_loaded(self):
-        """Manejador para la señal de datos cargados."""
-        # Habilitar tablas
-        self.disable_enable_tables(True)
-        self.column_dropdown.addItems(self.data_manager.get_data().columns)
-        # Llenar las tablas con datos
-        #self.update_tables_with_data()
-
-
-    def update_tables_with_data(self):
-        """Actualiza las tablas con datos cargados."""
-        data = self.data_manager.get_data()
-
-        # Si no hay datos, salir
-        if data is None:
-            return
-        
-        # Crear una instancia de exploreData con los datos
-        explore_data = exploreData(data)
-
-        # Llenar la tabla de resumen
-        self.fill_table_with_summary(self.summary_table, explore_data)
-
-        # Llenar la tabla de distribución
-        self.fill_table_with_distribution(self.distribution_table, explore_data)
-
-        # Llenar la tabla de correlación
-        self.fill_table_with_correlation(self.correlation_table, explore_data)
-
-    def fill_table_with_summary(self, table, explore_data: exploreData):
+    def on_data_loaded(self) -> None:
+        """Manejador para la señal de datos cargados.
+            Setea la pila en el índice 0 y habilita las tablas.
+            Carga los datos del combo box de columnas.
+        """
+        self.columns_dropdown.addItems(self.data_manager.get_data().columns)
+        print(f' (OnDataLoaded) Columna seleccionada por default: {self.columns_dropdown.currentText()}')
+        self.stacked_Layout.setCurrentIndex(0)
+       
+    def get_data(self) -> exploreData:
+        column_data = self.data_manager.get_data()
+      
+        if column_data is None:
+            QMessageBox.critical(self, "Error", "Columna vacia o no encontrada")
+       
+        data = column_data
+        explore_data = exploreData()
+        explore_data.set_data(data)
+        return explore_data
+                
+    def fill_table_with_summary(self, table: QTableWidget, explore_data: exploreData, selected_column: str):
         """Llena la tabla de resumen con los datos de explore_data."""
-        summary_stats = explore_data.get_summary_statistics()
         
+        summary_stats = explore_data.get_summary_statistics(selected_column)
+        
+        dfSummary = pd.DataFrame(summary_stats)
         # Configurar la tabla de resumen con los datos
         # Establecer número de filas y columnas
-        table.setColumnCount(len(summary_stats.columns))
-        table.setRowCount(len(summary_stats.index))
+        table.setColumnCount(len(dfSummary.columns))
+        table.setRowCount(len(dfSummary))
         
         # Establecer etiquetas de columna y fila
-        table.setHorizontalHeaderLabels(summary_stats.columns.astype(str))
-        table.setVerticalHeaderLabels(summary_stats.index.astype(str))
-
-    def fill_table_with_distribution(self, table, explore_data: exploreData):
+        
+        table.setHorizontalHeaderLabels(dfSummary.columns)
+        table.setVerticalHeaderLabels(dfSummary.index)
+        table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        for row in range(len(dfSummary)):
+            for col in range(len(dfSummary.columns)):
+                item = QTableWidgetItem(str(dfSummary.iloc[row, col]))
+                table.setItem(row, col, item)
+     
+    def fill_table_with_distribution(self, table: QTableWidget, explore_data: exploreData, selected_column: str ):
         """Llena la tabla de distribución con los datos de explore_data."""
-        distribution = explore_data.calculate_distribution()
+        distribution = explore_data.calculate_distribution(selected_column)
+        #Configurar la tabla de distribución con los datos
         
-        # Configurar la tabla de distribución con los datos
-        # Establecer número de filas
-        row_count = sum(len(value) for value in distribution.values())
-        table.setRowCount(row_count)
+        distribution_list = [(index, value) for index, value in distribution.items()]
         
-        # Llenar la tabla con datos de distribution
-        row = 0
-        for column, freq_dist in distribution.items():
-            for category, count in freq_dist.items():
-                item_text = f"{column}: {category} = {count}"
-                table.setItem(row, 0, QTableWidgetItem(item_text))
-                row += 1
-    
-    def fill_table_with_correlation(self, table, explore_data: exploreData):
+        table.setRowCount(len(distribution_list))
+        table.setColumnCount(2)
+
+        table.setHorizontalHeaderLabels(["Valor", "Frecuencia"])
+        table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        
+        for row, (index, value) in enumerate(distribution_list):
+            item_value = QTableWidgetItem(str(index))
+            item_frequency = QTableWidgetItem(str(value))
+            table.setItem(row, 0, item_value)
+            table.setItem(row, 1, item_frequency)
+
+    def fill_table_with_correlation(self, table: QTableWidget, explore_data: exploreData, selected_column: str):
         """Llena la tabla de correlación con los datos de explore_data."""
-        correlation = explore_data.calculate_correlation()
+        correlation = explore_data.calculate_correlation(selected_column)
         
         # Configurar la tabla de correlación con los datos
         # Establecer número de filas y columnas
@@ -163,3 +253,119 @@ class ExploreData(QWidget):
             for j, column in enumerate(correlation.columns):
                 item = QTableWidgetItem(str(correlation.loc[index, column]))
                 table.setItem(i, j, item)
+
+    def fill_table_with_mean(self, table: QTableWidget, explore_data: exploreData, selected_column: str):
+        """Llena la tabla de promedio con los datos de explore_data."""
+        
+        mean = explore_data.calculate_mean(selected_column)
+        # Configurar la tabla de promedio con los datos
+        # Establecer número de filas
+        table.setRowCount(1)
+        table.setColumnCount(1)
+        table.setHorizontalHeaderLabels([f"Promedio de columna {selected_column}"])
+        table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        table.setItem(0, 0, QTableWidgetItem(str(mean)))
+
+    def fill_table_with_median(self, table: QTableWidget, explore_data: exploreData, selected_column: str):
+        """Llena la tabla de mediana con los datos de explore_data."""
+        median = explore_data.calculate_median(selected_column)
+        
+        # Configurar la tabla de mediana con los datos
+        # Establecer número de filas
+        table.setRowCount(1)
+        table.setColumnCount(1)
+        table.setHorizontalHeaderLabels([f"Mediana de columna {selected_column}"])
+        table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        table.setItem(0, 0, QTableWidgetItem(str(median)))
+
+    def fill_table_with_variance(self, table: QTableWidget, explore_data: exploreData, selected_column: str):
+        """Llena la tabla de varianza con los datos de explore_data."""
+        variance = explore_data.calculate_variance(selected_column)
+        
+        
+        # Configurar la tabla de varianza con los datos
+        # Establecer número de filas
+        table.setRowCount(1)
+        table.setColumnCount(1)
+        table.setHorizontalHeaderLabels([f"Varianza de columna {selected_column}"])
+        table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        table.setItem(0, 0, QTableWidgetItem(str(variance)))
+
+    def fill_table_with_covariance(self, table: QTableWidget, explore_data: exploreData, selected_column: str):
+        """Llena la tabla de covarianza con los datos de explore_data. Solo para dataframes numericos"""
+        covariance = explore_data.calculate_covariance()
+        print(covariance)
+        # Configurar la tabla de covarianza con los datos
+        # Establecer número de filas y columnas
+        table.setColumnCount(len(covariance.columns))
+        table.setRowCount(len(covariance.index))
+        
+        # Establecer etiquetas de columna y fila
+        table.setHorizontalHeaderLabels(covariance.columns.astype(str))
+        table.setVerticalHeaderLabels(covariance.index.astype(str))
+        
+        # Llenar la tabla con datos de covariance
+        for i, index in enumerate(covariance.index):
+            for j, column in enumerate(covariance.columns):
+                item = QTableWidgetItem(str(covariance.loc[index, column]))
+                table.setItem(i, j, item)
+
+    def fill_table_with_standard_deviation(self, table: QTableWidget, explore_data: exploreData, selected_column: str):
+        """Llena la tabla de desviación estándar con los datos de explore_data."""
+        standard_deviation = explore_data.calculate_standard_deviation(selected_column)
+        
+        # Configurar la tabla de desviación estándar con los datos
+        # Establecer número de filas
+        table.setRowCount(1)
+        table.setColumnCount(1)
+        table.setHorizontalHeaderLabels([f"Desviación estándar de columna {selected_column}"])
+        table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        table.setItem(0, 0, QTableWidgetItem(str(standard_deviation)))
+
+    def fill_table_with_min_max(self, table: QTableWidget, explore_data: exploreData, selected_column: str): 
+        """Llena la tabla de min y max con los datos de explore_data."""
+        
+        min_max = explore_data.calculate_min_max(selected_column)
+        
+        # Configurar la tabla de min y max con los datos
+        # Establecer número de filas
+        table.setRowCount(len(min_max.index))
+        table.setColumnCount(len(min_max.columns))
+        
+        table.setHorizontalHeaderLabels(["Valor"])
+        table.setVerticalHeaderLabels(min_max.index.astype(str))
+        # Llenar la tabla con datos de min_max
+        print(min_max.shape)
+        for row in range(len(min_max)):# no se ven los datos, solo se ver los headers.  
+            value = min_max.iloc[row, 0]
+            item = QTableWidgetItem(str(value))
+            table.setItem(row, 0, item)
+       
+    def fill_table_with_unique_values(self, table: QTableWidget, explore_data: exploreData, selected_column: str):
+        """Llena la tabla de valores únicos con los datos de explore_data."""
+        unique_values = explore_data.get_unique_values(selected_column)
+        print(f"Cantidad de valores unicos: {unique_values}")
+        # Configurar la tabla de valores únicos con los datos
+        # Establecer número de filas
+        table.setRowCount(1)
+        
+        # Llenar la tabla con datos de unique_values
+        table.setColumnCount(1)
+        table.setHorizontalHeaderLabels(["Cantidad de Valores únicos"])
+        table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        table.setItem(0, 0, QTableWidgetItem(str(unique_values)))
+
+    def fill_table_with_missing_values(self, table: QTableWidget, explore_data: exploreData, selected_column: str):
+        """Llena la tabla de valores faltantes con los datos de explore_data."""
+        missing_values = explore_data.get_missing_values(selected_column)
+        print(f'Instancias donde hay valores faltantes: {missing_values}')
+        # Configurar la tabla de valores faltantes con los datos
+        # Establecer número de filas
+        table.setRowCount(1)
+        
+        table.setColumnCount(1)
+        table.setHorizontalHeaderLabels(["Cantidad de Valores faltantes"])
+        table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        table.setItem(0, 0, QTableWidgetItem(str(missing_values)))
+        # Llenar la tabla con datos de missing_values
+        

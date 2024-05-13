@@ -11,6 +11,7 @@ class TransformationData():
             :param dataframe: DataFrame de pandas con las columnas 'source', 'destination' y 'weight'.
             """
            self.dataframe = dataframe
+     
            #self.graph = nx.from_pandas_edgelist(self.dataframe, self.dataframe.columns[0], self.dataframe.columns[1], edge_attr=self.dataframe.columns[2])
     
     def delete_duplicates(self):
@@ -19,17 +20,25 @@ class TransformationData():
         que conecta los mismos nodos con el mismo peso, por lo que este método podría no ser necesario
         si NetworkX ya maneja los duplicados de manera adecuada al crear el grafo.
         """
-         self.dataframe = self.dataframe.drop_duplicates(subset=[self.dataframe.columns[0],self.dataframe.columns[1],self.dataframe.columns[2]])
+         
+         self.dataframe = self.dataframe.drop_duplicates()
 
     def cut_missing_values(self):
         """
         Elimina las aristas que contienen valores faltantes en alguna de sus columnas.
         """
-        self.dataframe = self.dataframe.dropna(subset=[self.dataframe.columns[0],self.dataframe.columns[1],self.dataframe.columns[2]])        
+        self.dataframe = self.dataframe.dropna()        
 
     def normalize_data(self):
         """
         Normaliza los valores de la columna 'weight' para que estén en el rango [0, 1].
         """
-        self.dataframe['weight'] = (self.dataframe[self.dataframe.columns[2]] - self.dataframe[self.dataframe.columns[2]].min()) / (self.dataframe[self.dataframe.columns[2]].max() - self.dataframe[self.dataframe.columns[2]].min())
+        min_val = self.dataframe[self.dataframe.columns[2]].min()
+        max_val = self.dataframe[self.dataframe.columns[2]].max()
+        self.dataframe['normalized_weight'] = (self.dataframe[self.dataframe.columns[2]] - min_val) / (max_val - min_val)
 
+    def get_data(self) -> pd.DataFrame | dd.DataFrame:
+         """
+         Devuelve el dataframe con los cambios realizados.
+            """ 
+         return self.dataframe

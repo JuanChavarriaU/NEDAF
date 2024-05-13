@@ -32,6 +32,10 @@ class ImportData(QWidget):
       buttonLoadData.clicked.connect(self.LoadData)
       Import_layout.addWidget(buttonLoadData)
       
+      buttonReloadData = QPushButton("Reload Data", self)
+      buttonReloadData.clicked.connect(self.reloadData)
+      Import_layout.addWidget(buttonReloadData)
+
       #Area para mostrar info del archivo cargado
       self.info_file = QLabel("Ningún archivo cargado")
       Import_layout.addWidget(self.info_file)
@@ -58,7 +62,11 @@ class ImportData(QWidget):
         
       self.tabExplorer.setTabPosition(QTabWidget.TabPosition.West)
                 
-      
+   def reloadData(self) -> None:
+       df = self.data_manager.get_data()
+       self.fill_data_table(df)
+
+
    def LoadData(self):
       #definir opciones
       
@@ -99,3 +107,4 @@ class ImportData(QWidget):
               item = QTableWidgetItem(str(preview_data[row][column]))
               self.data_table.setItem(row, column, item)
 
+   
