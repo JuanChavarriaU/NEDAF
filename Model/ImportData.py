@@ -80,11 +80,13 @@ class ImportData(QWidget):
             if self.file.endswith('.csv') :
               #here we load csv files 
                df = pd.read_csv(self.file)
+               self.info_file.setText(f"Archivo cargado: {self.file}")
             elif self.file.endswith('.parquet'):
                df = dd.read_parquet(self.file)
+               self.info_file.setText(f"Archivo cargado: {self.file}")
             elif self.file.endswith('.xlsx'):
                df = pd.read_excel(self.file)
-            self.info_file.setText(f"Archivo cargado: {self.file}")
+               self.info_file.setText(f"Archivo cargado: {self.file}")
             
             self.data_manager.set_data(df)
             

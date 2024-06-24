@@ -17,9 +17,8 @@ class DataManager(QObject):
         """Establece el DataFrame en el gestor."""
         try:
             self.data = data
-            #print(data.head(), "Esto es lo que se imprime en DataManager")
             self.data_loaded.emit()
-            print("LA SEÑAL FUE EMITIDA")
+            #QMessageBox.StandardButton.Ok(self, "Exito", f"Datos cargados correctamente") no funciona
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to connect: {str(e)}")   
     

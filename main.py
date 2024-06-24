@@ -14,8 +14,7 @@ from Model.ExportData import ExportData
 from View.clusterLogin import ClusterLogin
 from ViewModel.ExploreData import ExploreData
 from ViewModel.LLMInsights import LLMInsights
-from ViewModel.NetworkVisualization import NetworkVisualization 
-from ViewModel.StatisticalAnalysis import StatisticalAnalysis
+from ViewModel.NetworkVisualizationMod import NetworkVisualizationMod 
 from View.DataManager import DataManager
 
 
@@ -46,8 +45,8 @@ class MainWindow(QMainWindow):
         self.importar_tab = ImportData(self.data_manager)
         self.transformar_tab  = TransformationDataWindow(self.data_manager)
         self.explorar_tab = ExploreData(self.data_manager)
-        self.visualizacion_tab = NetworkVisualization()
-        self.analisis_tab = StatisticalAnalysis()
+        self.visualizacion_tab = NetworkVisualizationMod(self.data_manager)
+
         self.LLM_tab = LLMInsights()
         self.exportar_tab = ExportData()
 
@@ -55,7 +54,6 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.transformar_tab, "Transformación de Datos")
         self.tabs.addTab(self.explorar_tab, "Exploración de Datos")
         self.tabs.addTab(self.visualizacion_tab, "Visualización de Datos")
-        self.tabs.addTab(self.analisis_tab, "Analisis de Datos")
         self.tabs.addTab(self.LLM_tab, "LLM Insight")
         self.tabs.addTab(self.exportar_tab, "Exportar Datos")
   

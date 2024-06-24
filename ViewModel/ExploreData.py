@@ -182,7 +182,7 @@ class ExploreData(QWidget):
             Carga los datos del combo box de columnas.
         """
         self.columns_dropdown.addItems(self.data_manager.get_data().columns)
-        print(f' (OnDataLoaded) Columna seleccionada por default: {self.columns_dropdown.currentText()}')
+        #print(f' (OnDataLoaded) Columna seleccionada por default: {self.columns_dropdown.currentText()}')
         self.stacked_Layout.setCurrentIndex(0)
        
     def get_data(self) -> exploreData:
