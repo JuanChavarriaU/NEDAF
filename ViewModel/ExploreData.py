@@ -181,6 +181,7 @@ class ExploreData(QWidget):
             Setea la pila en el índice 0 y habilita las tablas.
             Carga los datos del combo box de columnas.
         """
+        self.columns_dropdown.clear()
         self.columns_dropdown.addItems(self.data_manager.get_data().columns)
         #print(f' (OnDataLoaded) Columna seleccionada por default: {self.columns_dropdown.currentText()}')
         self.stacked_Layout.setCurrentIndex(0)

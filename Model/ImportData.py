@@ -6,7 +6,10 @@ from PyQt6.QtCore import QStandardPaths
 from View.FileExplorer import FileExplorerWidget, SSHFileSystemModel
 import dask.dataframe as dd
 import pandas as pd
+from scipy.io import mmread
+from scipy.sparse import csr_matrix
 from View.DataManager import DataManager
+import numpy as np
 
 class ImportData(QWidget):
 
@@ -74,7 +77,7 @@ class ImportData(QWidget):
       default_dir = QStandardPaths.writableLocation(
           QStandardPaths.StandardLocation.DesktopLocation
       )
-      file_type = "CSV Files (*.csv);; Parquet Files (*.parquet);; Excel Files (*.xlsx)"
+      file_type = "CSV Files (*.csv);; Parquet Files (*.parquet);; Excel Files (*.xlsx);; Edges Files (*.edges);; mtx Files (*.mtx)"
       self.file, _ = QFileDialog.getOpenFileName(self, "Open File", default_dir, file_type, options=options)
       try:
             if self.file.endswith('.csv') :
@@ -87,6 +90,20 @@ class ImportData(QWidget):
             elif self.file.endswith('.xlsx'):
                df = pd.read_excel(self.file)
                self.info_file.setText(f"Archivo cargado: {self.file}")
+            elif self.file.endswith('.edges'):
+               df = pd.read_csv(self.file, sep=' ', header=None, names=["source", "destination", "weight"] or ["source", "destination"])
+            elif self.file.endswith('.mtx'):
+               matrixData = mmread(self.file)
+               rows, cols = matrixData.nonzero()
+               if isinstance(matrixData, csr_matrix):
+                   weights = matrixData.data
+                   df = pd.DataFrame({'source': rows, 'destination': cols, 'weight': weights})
+               else:
+                   df = pd.DataFrame({'source': rows, 'destination': cols})    
+
+               
+
+
             
             self.data_manager.set_data(df)
             
