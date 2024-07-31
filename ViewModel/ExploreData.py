@@ -5,6 +5,7 @@ from View.DataManager import DataManager
 from ViewModel.exploreData import exploreData
 import pandas as pd
 import numpy as np
+import pyqtgraph as pg
 class ExploreData(QWidget):
     
     def __init__(self, data_manager: DataManager):
@@ -33,7 +34,10 @@ class ExploreData(QWidget):
       self.columns_dropdown = QComboBox()
       self.operation_dropdown = QComboBox()
       self.stacked_Layout = QStackedLayout()
-
+      self.figure = pg.PlotWidget()
+      self.figure.setBackground('w')
+      self.figure.hide()
+      
       self.columns_dropdown.activated.connect(self.on_column_changed)
       
       self.operation_dropdown.activated.connect(self.on_operation_changed)
@@ -42,6 +46,7 @@ class ExploreData(QWidget):
       self.layout.addWidget(self.columns_dropdown)
       self.layout.addWidget(self.operation_dropdown)
       self.layout.addLayout(self.stacked_Layout)
+      self.layout.addWidget(self.figure)
 
       self.setLayout(self.layout)
     
@@ -136,6 +141,8 @@ class ExploreData(QWidget):
         """Manejador para el cambio de operación seleccionado en el `operation_dropdown`.
            Establece el índice actual del `QStackedWidget` al índice seleccionado en `operation_dropdown
         """
+        self.figure.hide()
+        self.stacked_Layout.setCurrentIndex(index)
         try:  
             selected_column = self.columns_dropdown.currentText()
             selected_operation = self.operation_dropdown.currentText()
@@ -160,7 +167,8 @@ class ExploreData(QWidget):
         """Manejador para el cambio de columna seleccionada en el `columns_dropdown`"""	
         selected_column = self.columns_dropdown.currentText()
         print("(OnColumnChanged) Selected Column: ", selected_column)
-        
+        self.figure.clear()
+        self.figure.hide()
         data = self.get_data().data
         numeric_columns = data.select_dtypes(include=np.number).columns
 
@@ -222,7 +230,7 @@ class ExploreData(QWidget):
         """Llena la tabla de distribución con los datos de explore_data."""
         distribution = explore_data.calculate_distribution(selected_column)
         #Configurar la tabla de distribución con los datos
-        
+
         distribution_list = [(index, value) for index, value in distribution.items()]
         
         table.setRowCount(len(distribution_list))
@@ -236,6 +244,10 @@ class ExploreData(QWidget):
             item_frequency = QTableWidgetItem(str(value))
             table.setItem(row, 0, item_value)
             table.setItem(row, 1, item_frequency)
+        self.figure.clear()
+        print("va el plot_bar_graph")
+        self.plot_bar_graph(distribution_list)
+        self.figure.show()
 
     def fill_table_with_correlation(self, table: QTableWidget, explore_data: exploreData, selected_column: str):
         """Llena la tabla de correlación con los datos de explore_data."""
@@ -370,4 +382,24 @@ class ExploreData(QWidget):
         table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
         table.setItem(0, 0, QTableWidgetItem(str(missing_values)))
         # Llenar la tabla con datos de missing_values
+    
+    
+  
+    
+    def is_numeric(self, value):
+        return isinstance(value, (float|int, float|int))
+    
+    def plot_bar_graph(self, distribution_list:list):
+        
+        if not all(self.is_numeric(val) for val, _ in distribution_list):
+            categoric_values = [val for val, _ in distribution_list]
+            categoric_indices = np.arange(len(categoric_values))
+            frequencies = [float(freq) for _, freq in distribution_list]
+            bg = pg.BarGraphItem(x=categoric_indices, height=frequencies, width=1, brush='b')
+            self.figure.addItem(bg)
+        else:
+           numeric_values = [val for val, _ in distribution_list]
+           frequencies = [float(freq) for _, freq in distribution_list] 
+           bg = pg.BarGraphItem(x=numeric_values, height=frequencies, width=1, brush='b')
+           self.figure.addItem(bg) 
         

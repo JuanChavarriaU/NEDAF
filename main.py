@@ -4,9 +4,10 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QApplication, 
     QVBoxLayout, 
-    QMessageBox
+    QMessageBox,
 
 )
+import threading
 from PyQt6.QtGui import QAction
 from Model.ImportData import ImportData
 from Model.TransformationData import TransformationDataWindow
@@ -74,7 +75,8 @@ class MainWindow(QMainWindow):
         except Exception as e:
              QMessageBox.critical(self, "Error", f"Failed to connect: {str(e)}")  
             
-                
+
+
 def main():
     app = QApplication(sys.argv)
     main_window = MainWindow()
@@ -85,3 +87,4 @@ def main():
 if __name__ == '__main__':
     main()
 
+ 

@@ -83,13 +83,13 @@ class ImportData(QWidget):
             if self.file.endswith('.csv') :
               #here we load csv files 
                df = pd.read_csv(self.file)
-               self.info_file.setText(f"Archivo cargado: {self.file}")
+               
             elif self.file.endswith('.parquet'):
                df = dd.read_parquet(self.file)
-               self.info_file.setText(f"Archivo cargado: {self.file}")
+               
             elif self.file.endswith('.xlsx'):
                df = pd.read_excel(self.file)
-               self.info_file.setText(f"Archivo cargado: {self.file}")
+               
             elif self.file.endswith('.edges'):
                df = pd.read_csv(self.file, sep=' ', header=None, names=["source", "destination", "weight"] or ["source", "destination"])
             elif self.file.endswith('.mtx'):
@@ -101,10 +101,7 @@ class ImportData(QWidget):
                else:
                    df = pd.DataFrame({'source': rows, 'destination': cols})    
 
-               
-
-
-            
+            self.info_file.setText(f"Archivo cargado: {self.file}")
             self.data_manager.set_data(df)
             
             self.fill_data_table(df)

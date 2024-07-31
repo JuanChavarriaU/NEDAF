@@ -16,11 +16,11 @@ class TransformationDataWindow(QWidget):
         layout = QVBoxLayout()
         
         #checkboxes para las transformaciones
-        self.checkbox_duplicates = QCheckBox("Eliminar duplicados")
+       # self.checkbox_duplicates = QCheckBox("Eliminar duplicados")
         self.checkbox_missing = QCheckBox("Eliminar valores faltantes")
         self.checkbox_normalize = QCheckBox("Normalizar")
 
-        layout.addWidget(self.checkbox_duplicates)
+       # layout.addWidget(self.checkbox_duplicates)
         layout.addWidget(self.checkbox_missing)
         layout.addWidget(self.checkbox_normalize)
 
@@ -52,9 +52,9 @@ class TransformationDataWindow(QWidget):
         data = self.data_manager.get_data()
         self.transformation_data = TransformationData(data)
         tranformations = []
-        if self.checkbox_duplicates.isChecked():
-                self.transformation_data.delete_duplicates()
-                tranformations.append("Duplicados eliminados")
+        #if self.checkbox_duplicates.isChecked():
+        #        self.transformation_data.delete_duplicates()
+        #       tranformations.append("Duplicados eliminados")
         if self.checkbox_missing.isChecked():
                 self.transformation_data.cut_missing_values()
                 tranformations.append("Valores faltantes eliminados")

@@ -4,12 +4,11 @@ import time
 import graph_tool.all as gt
 class NetworkAnalysis():
     
-    def __init__(self, data: pd.DataFrame):
+    def __init__(self):
         super().__init__()
-        
-        self.data = data
-        
-    def create_network_graph(self, data: pd.DataFrame) -> nx.Graph:
+      
+    @staticmethod    
+    def create_network_graph(data: pd.DataFrame) -> nx.Graph:
         """
         Crea un grafo a partir de un DataFrame.
     
@@ -33,23 +32,6 @@ class NetworkAnalysis():
                 G.add_edges_from(edges)
         else:
             raise ValueError("Error: DataFrame should have either 2 or 3 columns.")        
-        #start_time = time.perf_counter()
-        """        if len(data.columns) == 3:
-            for _, row in data.iterrows():
-                source = row[data.columns[0]]
-                target = row[data.columns[1]]
-                weight = row[data.columns[2]]
-            G.add_edge(source, target, weight=weight)
-        elif len(data.columns) == 2:
-            for _, row in data.iterrows():
-                source = row[data.columns[0]]
-                target = row[data.columns[1]]
-                G.add_edge(source, target)    
-
-        """
-
-        #finish_time = time.perf_counter()
-        #print(f"la generacion del grafo took:{finish_time-start_time}s")
         return G
 
     def create_network_graph_graph_tool(self, data: pd.DataFrame) -> gt.Graph:
