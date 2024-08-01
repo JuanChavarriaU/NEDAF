@@ -7,7 +7,8 @@ from PyQt6.QtCore import (
   pyqtSignal,
   pyqtSlot,
 )
-from PyQt6.QtCore import QPointF
+from PyQt6.QtCore import QPointF, Qt
+from PyQt6.QtGui import QColor, QPen
 import networkx as nx
 import pandas as pd
 import pyqtgraph as pg
@@ -17,10 +18,6 @@ import time
 from View.DataManager import DataManager
 from ViewModel import NetworkAnalysis as na 
 from fa2_modified import ForceAtlas2
-from netgraph import Graph, InteractiveGraph, EditableGraph
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
 pg.setConfigOptions(antialias=True)
 class NetworkVisualizationMod(QWidget):
     def __init__(self, data_manager: DataManager):
@@ -130,7 +127,7 @@ class NetworkVisualizationMod(QWidget):
             #view.setAspectLocked()
 
             graph = pg.GraphItem()
-            self.figure.addItem(graph)
+            
 
 
             nodes = list(G.nodes())
@@ -141,42 +138,31 @@ class NetworkVisualizationMod(QWidget):
 
             node_positions = np.array([positions[node] for node in nodes])
 
-            adj = np.zeros((len(nodes), len(nodes)), dtype=int)
+            adj = np.array([[nodes.index(source), nodes.index(target)] for source, target in edges])
 
-            if isinstance(G, nx.DiGraph):
-                for source, target in edges:
-                    adj[nodes.index(source), nodes.index(target)] = 1
-            for source, target in edges:
-                adj[nodes.index(source), nodes.index(target)] = 1
-                adj[nodes.index(target), nodes.index(source)] = 1  
+             
 
-            for i in range(len(adj)):
-                for j in range(i+1, len(adj)):
-                    if adj[i, j]:
-                        start = QtCore.QPointF(node_positions[i].tolist() + [0])
-                        end = QtCore.QPointF(node_positions[j].tolist() + [0])
-                        edge = pg.LineSegmentItem(start=start, end=end)
-                        edge.setPen(pg.mkPen(color='b', width=1))
-                        self.figure.addItem(edge)
             #print("Nodes:", nodes)
             #print("Edges:", edges)
-            print("Adjacency matrix:\n", adj)
-
-            """for (source, target), weight in weights.items():
-                i, j = nodes.index(source), nodes.index(target)
-                edge_center = (node_positions[i] + node_positions[j]) / 2
-                text = pg.TextItem(text=str(weight), anchor=(0.5, 0.5))
-                text.setPos(QPointF(edge_center[0], edge_center[1]))
-                self.figure.addItem(text)"""
+            #print("Adjacency matrix:\n", adj)
+            
+        
             
             graph.setData(
                 pos=node_positions, 
                 adj=adj, 
                 size=15, 
                 symbol='o',
-                pxMode=True, 
-                pen=pg.mkPen(color='black', width=2),
-                brush=pg.mkBrush('Purple'))
+                pxMode=True,
+                brush=pg.mkBrush('Purple'), 
+                hoverable=True,
+                useCache=False,
+                pen=pg.mkPen(color='black', width=1)
+            )
+            self.figure.addItem(graph)
+
+
+          
 
     def on_data_loaded(self) -> None:
         """Manejador para la señal de datos cargados."""
