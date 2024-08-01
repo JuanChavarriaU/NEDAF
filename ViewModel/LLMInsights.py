@@ -1,10 +1,12 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QTextEdit, QLineEdit
+from ViewModel import chatbot
 # from ViewModel import LLMBackend
 
 class LLMInsights(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.conversation_history = []
 
     def initUI(self):
 
@@ -34,8 +36,8 @@ class LLMInsights(QWidget):
     def process_query(self, query):
         # Implement your LLM logic here
 
-        # response = LLMBackend.answer(query)
+        response = chatbot.answer(query)
 
         self.text_area.append(f"You: {query}")    
         
-        # self.text_area.append(f"LLM: {response}")    
+        self.text_area.append(f"NEDAF Assistant: {response}")    
