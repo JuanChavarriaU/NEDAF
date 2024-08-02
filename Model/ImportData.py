@@ -9,7 +9,6 @@ import pandas as pd
 from scipy.io import mmread
 from scipy.sparse import csr_matrix
 from View.DataManager import DataManager
-import numpy as np
 
 class ImportData(QWidget):
 
@@ -34,10 +33,6 @@ class ImportData(QWidget):
       buttonLoadData = QPushButton("Importar Archivo", self)
       buttonLoadData.clicked.connect(self.LoadData)
       Import_layout.addWidget(buttonLoadData)
-      
-      buttonReloadData = QPushButton("Reload Data", self)
-      buttonReloadData.clicked.connect(self.reloadData)
-      Import_layout.addWidget(buttonReloadData)
 
       #Area para mostrar info del archivo cargado
       self.info_file = QLabel("Ningún archivo cargado")
@@ -64,10 +59,7 @@ class ImportData(QWidget):
         self.tabExplorer.addTab(self.fileExplorer, "Remote File Explorer")
         
       self.tabExplorer.setTabPosition(QTabWidget.TabPosition.West)
-                
-   def reloadData(self) -> None:
-       df = self.data_manager.get_data()
-       self.fill_data_table(df)
+
 
 
    def LoadData(self):
@@ -105,8 +97,8 @@ class ImportData(QWidget):
             self.data_manager.set_data(df)
             
             self.fill_data_table(df)
+            QMessageBox.information(self, "Exito", f"Los datos se han cargado existosamente.")
             
-            return df
       except Exception as e:
             QMessageBox.critical(self, "Error", f"Ha ocurrido un error: {str(e)}")
    
@@ -114,7 +106,6 @@ class ImportData(QWidget):
        #vista previa del df
       preview_data = df.head(100).values
       #config # of rows and columns
-      #self.data_table.setHorizontalHeaderLabels(df.columns.tolist())
       self.data_table.setRowCount(len(preview_data))
       self.data_table.setColumnCount(len(preview_data[0]))
       #fill table

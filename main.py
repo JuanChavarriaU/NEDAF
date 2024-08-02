@@ -47,7 +47,6 @@ class MainWindow(QMainWindow):
         self.transformar_tab  = TransformationDataWindow(self.data_manager)
         self.explorar_tab = ExploreData(self.data_manager)
         self.visualizacion_tab = NetworkVisualizationMod(self.data_manager)
-
         self.LLM_tab = LLMInsights()
         self.exportar_tab = ExportData()
 

@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import( QWidget, QVBoxLayout, QPushButton,
- QWidget, QCheckBox, QPushButton, QTextEdit, QLabel
+ QWidget, QCheckBox, QPushButton, QTextEdit, QLabel, QTableWidget, QTableWidgetItem
 )
 
 from Model.transformationData import TransformationData
@@ -19,10 +19,11 @@ class TransformationDataWindow(QWidget):
        # self.checkbox_duplicates = QCheckBox("Eliminar duplicados")
         self.checkbox_missing = QCheckBox("Eliminar valores faltantes")
         self.checkbox_normalize = QCheckBox("Normalizar")
+        self.data_table = QTableWidget()
+        self.data_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers) # read only
 
        # layout.addWidget(self.checkbox_duplicates)
-        layout.addWidget(self.checkbox_missing)
-        layout.addWidget(self.checkbox_normalize)
+       
 
         self.status_label = QLabel("Cargando datos...")
         
@@ -34,8 +35,11 @@ class TransformationDataWindow(QWidget):
         self.data_view = QTextEdit()
         self.data_view.setReadOnly(True)
         
+        layout.addWidget(self.checkbox_missing)
+        layout.addWidget(self.checkbox_normalize)
         layout.addWidget(self.apply_button)
         layout.addWidget(self.data_view)
+        layout.addWidget(self.data_table)
 
         self.setLayout(layout)
 
@@ -66,5 +70,16 @@ class TransformationDataWindow(QWidget):
         transformed_data = "Datos transformados:\n\n" + "\n".join(tranformations)
         self.data_view.setPlainText(transformed_data)
         self.data_manager.set_data(self.transformation_data.get_data())
-      
+        self.fill_data_table(self.transformation_data.get_data())
 
+    def fill_data_table(self, df):
+       #vista previa del df
+      preview_data = df.head(100).values
+      #config # of rows and columns
+      self.data_table.setRowCount(len(preview_data))
+      self.data_table.setColumnCount(len(preview_data[0]))
+      #fill table
+      for row in range(len(preview_data)):
+          for column in range (len(preview_data[0])):
+              item = QTableWidgetItem(str(preview_data[row][column]))
+              self.data_table.setItem(row, column, item)

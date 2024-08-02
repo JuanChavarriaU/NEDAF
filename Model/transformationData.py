@@ -14,14 +14,6 @@ class TransformationData():
      
            #self.graph = nx.from_pandas_edgelist(self.dataframe, self.dataframe.columns[0], self.dataframe.columns[1], edge_attr=self.dataframe.columns[2])
     
-    def delete_duplicates(self):
-         """
-        Elimina aristas duplicadas en el grafo. En un grafo, una arista duplicada sería aquella
-        que conecta los mismos nodos con el mismo peso, por lo que este método podría no ser necesario
-        si NetworkX ya maneja los duplicados de manera adecuada al crear el grafo.
-        """
-         
-         self.dataframe = self.dataframe.drop_duplicates()
 
     def cut_missing_values(self):
         """
@@ -36,6 +28,7 @@ class TransformationData():
         min_val = self.dataframe[self.dataframe.columns[2]].min()
         max_val = self.dataframe[self.dataframe.columns[2]].max()
         self.dataframe['normalized_weight'] = (self.dataframe[self.dataframe.columns[2]] - min_val) / (max_val - min_val)
+        
 
     def get_data(self) -> pd.DataFrame | dd.DataFrame:
          """
