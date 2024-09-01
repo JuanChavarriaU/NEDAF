@@ -48,14 +48,14 @@ class MainWindow(QMainWindow):
         self.explorar_tab = ExploreData(self.data_manager)
         self.visualizacion_tab = NetworkVisualizationMod(self.data_manager)
         self.LLM_tab = LLMInsights()
-        self.exportar_tab = ExportData()
+        #self.exportar_tab = ExportData()
 
         self.tabs.addTab(self.importar_tab, "Importar Datos") 
         self.tabs.addTab(self.transformar_tab, "Transformación de Datos")
         self.tabs.addTab(self.explorar_tab, "Exploración de Datos")
         self.tabs.addTab(self.visualizacion_tab, "Visualización de Datos")
         self.tabs.addTab(self.LLM_tab, "LLM Insight")
-        self.tabs.addTab(self.exportar_tab, "Exportar Datos")
+        #self.tabs.addTab(self.exportar_tab, "Exportar Datos")
   
 
     def ClusterOptionAction(self):

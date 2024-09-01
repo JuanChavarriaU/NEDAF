@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QComboBox, QMessageBox, QProgressBar
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QMessageBox, QTextEdit, QScrollBar
 from PyQt6.QtCore import (
   QObject,
   QRunnable,
@@ -6,19 +6,18 @@ from PyQt6.QtCore import (
   QTimer,
   pyqtSignal,
   pyqtSlot,
+  QThread
 )
 from PyQt6.QtCore import QPointF, Qt
 from PyQt6.QtGui import QColor, QPen
 import networkx as nx
-import pandas as pd
 import pyqtgraph as pg
-from pyqtgraph import QtCore
 import numpy as np
 import time
 from View.DataManager import DataManager
 from ViewModel import NetworkAnalysis as na 
-from fa2_modified import ForceAtlas2
-pg.setConfigOptions(antialias=True)
+
+
 class NetworkVisualizationMod(QWidget):
     def __init__(self, data_manager: DataManager):
         super().__init__()
@@ -49,6 +48,7 @@ class NetworkVisualizationMod(QWidget):
             "Number of Communities": na.NetworkCommunities.NoOfCommunities,
             "Network Community Size": na.NetworkCommunities.networkCommunitySize,
             "Network Key Nodes": na.NetworkCommunities.networkKeyNodes,
+            "Community Leader Nodes": na.NetworkCommunities.communityLeaderNodes,
             "Network Isolates": na.NetworkCommunities.networkIsolates, 
             "Network Degree Centrality": na.NetworkCommunities.networkDegreeCentrality,
             "Network Betweenness Centrality": na.NetworkCommunities.networkBetweennessCentrality,
@@ -63,22 +63,32 @@ class NetworkVisualizationMod(QWidget):
         layout = QVBoxLayout()  # canvas 
 
         # layout para la grafica
+        pg.setConfigOptions(antialias=True)
         self.figure = pg.PlotWidget()
         self.figure.setBackground('w')
+        self.figure.adjustSize()
         
+      
         layout.addWidget(self.figure)
-        
+
+
+        self.is_fullscreen = False
         # layout para el dropdown
         self.GraphBasicMetricsDropDown = QComboBox()
+        self.GraphBasicMetricsDropDown.setStyleSheet("QComboBox {combobox-popup: 0;}")
+        self.GraphBasicMetricsDropDown.setMaxVisibleItems(5)
+        self.GraphBasicMetricsDropDown.setPlaceholderText("Metricas del grafo")
+        
         self.GraphBasicMetricsDropDown.activated.connect(self.on_operation_changed)
 
         layout.addWidget(self.GraphBasicMetricsDropDown)
 
         # layout para el label
-        self.stats_label = QLabel()
-        self.stats_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.stats_label.setWindowTitle('Network Stats')
-        layout.addWidget(self.stats_label)
+        self.stats_text = QTextEdit(self)
+        self.stats_text.setReadOnly(True)
+        self.stats_text.verticalScrollBar()
+        
+        layout.addWidget(self.stats_text)
 
         # layout para el boton
         button = QPushButton("Visualizar Red")
@@ -89,80 +99,30 @@ class NetworkVisualizationMod(QWidget):
               
       
         self.setLayout(layout)
-
+   
+    def on_visualization_finished(self):
+        print("Computation complete.")
+            
     def visualize_networks(self):
-        start_time = time.perf_counter()
-        
-        self.Graph = self.NetworkAnalysis.create_network_graph(self.data_manager.get_data())
-        finished_time = time.perf_counter()
-        print(f"Creacion de grafo nx tomó: {finished_time - start_time}s")
-        # Calcular el layout
-        start_time = time.perf_counter()
-        
-        finished_time = time.perf_counter()
-        print(f"Creacion de grafo gt tomó: {finished_time - start_time}s")
-        
-        start_time = time.perf_counter()
-        num_nodes = self.Graph.number_of_nodes()
-        if num_nodes > 5000:
-            positions = self.compute_large_layout(self.Graph)
-        elif num_nodes >= 100:
-            positions = self.compute_medium_layout(self.Graph)
-        elif num_nodes < 100:
-            positions = self.compute_small_layout(self.Graph)
-        finished_time = time.perf_counter()
-        print(f"Calculo de compute_layout tomó: {finished_time - start_time}s")
-        # Visualizar el grafo
-        start_time_vn = time.perf_counter()
-        self.plot_graph(self.Graph, positions)
-        finished_time = time.perf_counter()
-        print(f"Visualizar el grafo tomó: {finished_time - start_time_vn}s")
-    
 
-    def plot_graph(self, G: nx.Graph, positions):
-        
+        self.worker = Worker(self.NetworkAnalysis, self.data_manager.get_data())
+        self.worker.finished.connect(self.on_visualization_finished)
+        self.worker.positions_ready.connect(self.set_graph)
+        self.worker.positions_ready.connect(self.start_plotting_thread)
+        self.worker.start()
 
-            self.figure.clear()
-            #view = self.figure.addViewBox()
-            #view.setAspectLocked()
+    def start_plotting_thread(self, G: nx.Graph, positions):
+        self.plot_worker = PlotWorker(G, positions)
+        self.plot_worker.plot_ready.connect(self.on_plotting_finished)
+        self.plot_worker.start()
 
-            graph = pg.GraphItem()
-            
+    def on_plotting_finished(self, graph_item):
+        self.figure.clear()
+        self.figure.addItem(graph_item)
+        print("Plotting complete.")
 
-
-            nodes = list(G.nodes())
-            edges = list(G.edges())
-            weights = nx.get_edge_attributes(G, 'w')
-            if not weights:
-                weights = {(u,v): 1 for u,v in edges}
-
-            node_positions = np.array([positions[node] for node in nodes])
-
-            adj = np.array([[nodes.index(source), nodes.index(target)] for source, target in edges])
-
-             
-
-            #print("Nodes:", nodes)
-            #print("Edges:", edges)
-            #print("Adjacency matrix:\n", adj)
-            
-        
-            
-            graph.setData(
-                pos=node_positions, 
-                adj=adj, 
-                size=15, 
-                symbol='o',
-                pxMode=True,
-                brush=pg.mkBrush('Purple'), 
-                hoverable=True,
-                useCache=False,
-                pen=pg.mkPen(color='black', width=1)
-            )
-            self.figure.addItem(graph)
-
-
-          
+    def set_graph(self, G: nx.Graph, _):
+        self.Graph = G    
 
     def on_data_loaded(self) -> None:
         """Manejador para la señal de datos cargados."""
@@ -189,6 +149,7 @@ class NetworkVisualizationMod(QWidget):
                                                  "Number of Communities",
                                                  "Network Community Size",
                                                  "Network Key Nodes",
+                                                 "Community Leader Nodes",
                                                  "Network Isolates", 
                                                  "Network Degree Centrality",
                                                  "Network Betweenness Centrality",
@@ -196,7 +157,7 @@ class NetworkVisualizationMod(QWidget):
                                                  "Network Eigenvector Centrality",
                                                  "Network PageRank"])
 
-    def on_operation_changed(self, index: int):
+    def on_operation_changed(self, G: nx.Graph):
         """Manejador para el cambio de operación seleccionado en el `graphbasicmetrics_dropdown`."""
         try:
             selected_operation = self.GraphBasicMetricsDropDown.currentText()
@@ -207,42 +168,80 @@ class NetworkVisualizationMod(QWidget):
                 
                 result = functionSelected(self.Graph)
                 print(f"{selected_operation}: {result}")
-                self.stats_label.setText(str(result))
-
+                self.stats_text.setPlainText(str(result))
+                #ocultar el qtextEdit para mejor vis
             else:
                 QMessageBox.critical(self, "Error", f"Operación no soportada")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error cambiando la operación {str(e)}")
 
+class Worker(QThread):
+    positions_ready = pyqtSignal(object, object) #signature
 
-    def compute_large_layout(self, G: nx.Graph):
-        # toma 2 minutos y 11s en ejecutar. 
-        forceAtlas2 = ForceAtlas2(
-            outboundAttractionDistribution=True,
-            linLogMode=False,
-            adjustSizes=False,
-            edgeWeightInfluence=1.0,
+    def __init__(self, network_analysis, data):
+        super().__init__()
+        self.network_analysis = network_analysis
+        self.data = data
 
-            jitterTolerance=1.0,
-            barnesHutOptimize=True,
-            barnesHutTheta=1.0,
-            multiThreaded=False,
+    def run(self):
+        self.G = self.network_analysis.create_network_graph(self.data)
+        num_nodes = self.G.number_of_nodes()
 
-            scalingRatio=2.0,
-            strongGravityMode=False,
-            gravity=1.0,
+        if num_nodes > 5000:
+            positions = self.network_analysis.compute_large_layout(self.G)
+        elif num_nodes >= 100:
+            positions = self.network_analysis.compute_medium_layout(self.G)
+        else:
+            positions = self.network_analysis.compute_small_layout(self.G)
 
-            verbose=True
+        self.positions_ready.emit(self.G, positions)
+   
+
+class PlotWorker(QThread):
+    plot_ready = pyqtSignal(object)
+
+    def __init__(self, G: nx.Graph, positions):
+        super().__init__()
+        self.G = G
+        self.positions = positions
+
+    def run(self):
+        nodes = list(self.G.nodes())
+        edges = list(self.G.edges())
+        weights = nx.get_edge_attributes(self.G, 'w')
+        if not weights:
+            weights = {(u, v): 1 for u, v in edges}
+
+
+        # Calculate node degrees or weights
+        degrees = dict(self.G.degree(nodes))  # This returns a dictionary of node degrees
+
+        # Normalize the sizes based on degree
+        min_size = 10
+        max_size = 45
+
+        min_degree = min(degrees.values())
+        max_degree = max(degrees.values())
+        #linear interpolation formula
+        node_sizes = [
+            min_size + (max_size - min_size) * (degrees[node] - min_degree) / (max_degree - min_degree) if max_degree != min_degree else max_size
+            for node in nodes
+        ]
+
+
+        node_positions = np.array([self.positions[node] for node in nodes])
+        adj = np.array([[nodes.index(source), nodes.index(target)] for source, target in edges])
+
+        graph_item = pg.GraphItem(
+            pos=node_positions,
+            adj=adj,
+            size=node_sizes,
+            symbol='o',
+            pxMode=True,
+            brush=pg.mkBrush('Purple'),
+            hoverable=True,
+            useCache=False,
+            pen=pg.mkPen(color='black', width=1)
         )
 
-        return forceAtlas2.forceatlas2_networkx_layout(G, pos=None, iterations=100)
-
-
-    def compute_medium_layout(self, G: nx.Graph):
-        return nx.spring_layout(G, seed=42)  # Usar el algoritmo de Fruchterman-Reingold 
-    
-    def compute_small_layout(self, G: nx.Graph):
-        return nx.kamada_kawai_layout(G)  # Usar KK Algo
-
-
-
+        self.plot_ready.emit(graph_item)     

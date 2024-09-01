@@ -47,7 +47,7 @@ class exploreData():
         """Calcula y devuelve la distribución de frecuencias para cada columna categórica."""
         if selected_column not in self.data.columns:
             raise ValueError(f"Columna {selected_column} no existe en el dataframe")
-        return self.data[selected_column].value_counts()
+        return self.data[selected_column].value_counts(sort=False)
 
     def get_unique_values(self, selected_column: str) -> int:
         """Devuelve el número de valores únicos por columna."""

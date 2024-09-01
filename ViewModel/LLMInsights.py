@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QTextEdit, QLineEdit
+import time as tm
 from ViewModel import chatbot
 # from ViewModel import LLMBackend
 
@@ -17,9 +18,10 @@ class LLMInsights(QWidget):
         self.text_area.setReadOnly(True)
 
         self.input_field = QLineEdit()
-
+        self.input_field.setPlaceholderText("Envía una consulta al Asistente NEDAF")
         self.send_button = QPushButton("Send ▶️")
-        self.send_button.clicked.connect(self.on_send_clicked)
+        
+        self.send_button.clicked.connect(self.on_send_clicked) 
 
 
         layout.addWidget(self.text_area)
@@ -29,15 +31,16 @@ class LLMInsights(QWidget):
 
     def on_send_clicked(self):
         query = self.input_field.text()
+
+        self.text_area.append(f"You: {query} \n")
+
         self.process_query(query)
+        
         self.input_field.clear()
         
 
     def process_query(self, query):
         # Implement your LLM logic here
-
         response = chatbot.answer(query)
-
-        self.text_area.append(f"You: {query}")    
         
-        self.text_area.append(f"NEDAF Assistant: {response}")    
+        self.text_area.append(f"NEDAF Assistant: {response}\n")    

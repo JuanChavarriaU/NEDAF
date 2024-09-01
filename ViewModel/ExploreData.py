@@ -38,6 +38,9 @@ class ExploreData(QWidget):
       self.figure.setBackground('w')
       self.figure.hide()
       
+      self.columns_dropdown.setPlaceholderText("Columnas")
+      self.operation_dropdown.setPlaceholderText("Operaciones estadísticas")
+
       self.columns_dropdown.activated.connect(self.on_column_changed)
       
       self.operation_dropdown.activated.connect(self.on_operation_changed)

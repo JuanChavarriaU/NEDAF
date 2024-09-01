@@ -1,7 +1,8 @@
 import networkx as nx 
 import pandas as pd
-import time
 import graph_tool.all as gt
+from fa2_modified import ForceAtlas2
+
 class NetworkAnalysis():
     
     def __init__(self):
@@ -34,29 +35,35 @@ class NetworkAnalysis():
             raise ValueError("Error: DataFrame should have either 2 or 3 columns.")        
         return G
 
-    def create_network_graph_graph_tool(self, data: pd.DataFrame) -> gt.Graph:
-        g = gt.Graph(directed=False)
 
-        weight_map = g.new_edge_property("float")
-        vertex_map = g.add_vertex(data.shape[0])  # Add vertices for all rows
+    def compute_large_layout(self, G: nx.Graph):
+        
+        forceAtlas2 = ForceAtlas2(
+            outboundAttractionDistribution=True,
+            linLogMode=False,
+            adjustSizes=False,
+            edgeWeightInfluence=1.0,
 
-        if len(data.columns) == 3:
-            edges = data.values.tolist()
-            g.add_edge_list([(vertex_map[source], vertex_map[target]) for source, target, _ in edges], eprops=[weight_map])
-            weight_map.a = [weight for _, _, weight in edges]
-        elif len(data.columns) == 2:
-            edges = data.values.tolist()
-            g.add_edge_list([(vertex_map[source], vertex_map[target]) for source, target in edges])
-        else:
-            print("Error: DataFrame should have either 2 or 3 columns.")
-            return None
+            jitterTolerance=1.0,
+            barnesHutOptimize=True,
+            barnesHutTheta=1.0,
+            multiThreaded=False,
 
-        g.edge_properties["weight"] = weight_map
-        return g
+            scalingRatio=2.0,
+            strongGravityMode=False,
+            gravity=1.0,
 
-               
+            verbose=False
+        )
+
+        return forceAtlas2.forceatlas2_networkx_layout(G, pos=None, iterations=100)
 
 
+    def compute_medium_layout(self, G: nx.Graph):
+        return nx.spring_layout(G)  # Usar el algoritmo de Fruchterman-Reingold 
+    
+    def compute_small_layout(self, G: nx.Graph):
+        return nx.kamada_kawai_layout(G)  # Usar KK Algo
 
 class networkStatistics(NetworkAnalysis): 
 
@@ -239,8 +246,26 @@ class NetworkCommunities():
         Devuelve:
         list: Una lista de nodos clave con un grado mayor a 10.
         """
-        return [n for n, d in G.degree() if d > 10]
+        return [node for node, degree in G.degree() if degree > 10]
     
+    def communityLeaderNodes(G: nx.Graph):
+        
+        c = nx.algorithms.community.greedy_modularity_communities(G)
+        
+        # Encontrar los nodos clave (líderes) de cada comunidad
+        key_nodes = []
+        for community in c:
+          # Calcular la centralidad de grado para los nodos en la comunidad
+          degree_centrality = nx.degree_centrality(G.subgraph(community))
+          # El nodo con la mayor centralidad de grado es el líder
+          leader = max(degree_centrality, key=degree_centrality.get)
+          key_nodes.append(leader)
+
+        # Imprimir los nodos clave
+
+        return [f"Community: {i+1}: {leader}" for i, leader in enumerate(key_nodes)]
+          
+
     #isolates
     def networkIsolates(G: nx.Graph):
         """
