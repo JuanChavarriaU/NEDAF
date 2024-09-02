@@ -1,8 +1,8 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QComboBox, 
                             QLabel, QMessageBox, QStackedLayout)
 from PyQt6 import QtWidgets
-from View.DataManager import DataManager    
-from ViewModel.exploreData import exploreData
+from Model.DataManager import DataManager    
+from Model.exploreData import exploreData
 import pandas as pd
 import numpy as np
 import pyqtgraph as pg

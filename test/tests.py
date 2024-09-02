@@ -1,9 +1,9 @@
 import pandas as pd
 import unittest
 from Model.transformationData import TransformationData
-from ViewModel.exploreData import exploreData
-from ViewModel.NetworkVisualizationMod import NetworkVisualizationMod
-from ViewModel.NetworkAnalysis import NetworkAnalysis, networkStatistics, NetworkCommunities
+from Model.exploreData import exploreData
+from View.NetworkVisualizationMod import NetworkVisualizationMod
+from Model.NetworkAnalysis import NetworkAnalysis, networkStatistics, NetworkCommunities
 import timeit
 import matplotlib.pyplot as plt
 from scipy.io import mmread

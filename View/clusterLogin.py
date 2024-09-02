@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QLabel,
 from PyQt6.QtCore import Qt
 import paramiko as pk
 
-from Model.ImportData import ImportData
+from View.ImportData import ImportData
 class ClusterLogin(QDialog):
    
     def __init__(self):

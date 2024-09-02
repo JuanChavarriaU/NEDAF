@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import( QWidget, QVBoxLayout, QPushButton,
 )
 
 from Model.transformationData import TransformationData
-from View.DataManager import DataManager
+from Model.DataManager import DataManager
 
 class TransformationDataWindow(QWidget):
     def __init__(self, data_manager: DataManager):

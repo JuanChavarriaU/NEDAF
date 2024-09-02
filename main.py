@@ -9,14 +9,13 @@ from PyQt6.QtWidgets import (
 )
 import threading
 from PyQt6.QtGui import QAction
-from Model.ImportData import ImportData
-from Model.TransformationData import TransformationDataWindow
-from Model.ExportData import ExportData 
+from View.ImportData import ImportData
+from View.TransformationData import TransformationDataWindow
 from View.clusterLogin import ClusterLogin
-from ViewModel.ExploreData import ExploreData
-from ViewModel.LLMInsights import LLMInsights
-from ViewModel.NetworkVisualizationMod import NetworkVisualizationMod 
-from View.DataManager import DataManager
+from View.ExploreData import ExploreData
+from View.LLMInsights import LLMInsights
+from View.NetworkVisualizationMod import NetworkVisualizationMod 
+from Model.DataManager import DataManager
 
 
 class MainWindow(QMainWindow):

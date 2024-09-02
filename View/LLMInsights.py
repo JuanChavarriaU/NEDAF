@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QTextEdit, QLineEdit
 import time as tm
-from ViewModel import chatbot
+from Model import chatbot
 # from ViewModel import LLMBackend
 
 class LLMInsights(QWidget):

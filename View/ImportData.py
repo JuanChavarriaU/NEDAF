@@ -8,7 +8,7 @@ import dask.dataframe as dd
 import pandas as pd
 from scipy.io import mmread
 from scipy.sparse import csr_matrix
-from View.DataManager import DataManager
+from Model.DataManager import DataManager
 
 class ImportData(QWidget):
 

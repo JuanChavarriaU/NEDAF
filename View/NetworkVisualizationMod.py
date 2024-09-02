@@ -14,8 +14,8 @@ import networkx as nx
 import pyqtgraph as pg
 import numpy as np
 import time
-from View.DataManager import DataManager
-from ViewModel import NetworkAnalysis as na 
+from Model.DataManager import DataManager
+from Model import NetworkAnalysis as na 
 
 
 class NetworkVisualizationMod(QWidget):
