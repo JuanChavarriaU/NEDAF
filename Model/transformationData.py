@@ -27,7 +27,9 @@ class TransformationData():
         """
         min_val = self.dataframe[self.dataframe.columns[2]].min()
         max_val = self.dataframe[self.dataframe.columns[2]].max()
-        self.dataframe['normalized_weight'] = (self.dataframe[self.dataframe.columns[2]] - min_val) / (max_val - min_val)
+        self.dataframe[self.dataframe.columns[2]] = (self.dataframe[self.dataframe.columns[2]] - min_val) / (max_val - min_val)
+       
+        
         
 
     def get_data(self) -> pd.DataFrame | dd.DataFrame:

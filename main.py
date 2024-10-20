@@ -2,8 +2,7 @@ import sys
 from PyQt6.QtWidgets import (
     QTabWidget,
     QMainWindow,
-    QApplication, 
-    QVBoxLayout, 
+    QApplication,  
     QMessageBox,
 
 )
@@ -73,7 +72,6 @@ class MainWindow(QMainWindow):
         except Exception as e:
              QMessageBox.critical(self, "Error", f"Failed to connect: {str(e)}")  
             
-
 
 def main():
     app = QApplication(sys.argv)

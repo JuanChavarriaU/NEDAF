@@ -1,5 +1,5 @@
 import dotenv
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI 
 from langchain_core.prompts import (
     PromptTemplate,
     SystemMessagePromptTemplate,
@@ -23,8 +23,8 @@ book_vector_db = Chroma(
 prompt_template = """You are a personal Bot assistant for answering any questions about graph theory, mobility networks, network science, biology and statistics.
 You are given a question and a set of documents.
 If the user's question requires you to provide specific information from the documents, give your answer based only on the examples provided below. DON'T generate an answer that is NOT written in the provided examples.
-If you don't find the answer to the user's question with the examples provided to you below, answer that you didn't find the answer in the documentation and propose him to rephrase his query with more details.
-Use bullet points if you have to make a list, only if necessary.
+If you don't find the answer to the user's question with the examples provided to you below, answer that you didn't find the answer in the documentation however propose an answer based on your own knowledge.
+Use bullet points if you have to make a list, only if necessary. Based on the language of the input you have to answer in the same language ALWAYS.
 
 DOCUMENTS:
 =========
@@ -42,7 +42,6 @@ messages = [book_system_prompt, book_user_prompt]
 
 book_prompt = ChatPromptTemplate(input_variables=["context", "question"], messages=messages)
 
-
 book_retriever = book_vector_db.as_retriever(k=3)
 
 book_chain = (
@@ -54,7 +53,9 @@ book_chain = (
     | ChatOpenAI()
     | StrOutputParser()
     
-
 )
+
 def answer(question):
+   
     return book_chain.invoke(question)
+    

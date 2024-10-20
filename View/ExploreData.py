@@ -234,22 +234,24 @@ class ExploreData(QWidget):
         distribution = explore_data.calculate_distribution(selected_column)
         #Configurar la tabla de distribución con los datos
 
-        distribution_list = [(index, value) for index, value in distribution.items()]
-        
-        table.setRowCount(len(distribution_list))
+        distribution_list_sorted = [(index, value) for index, value in distribution.items()]
+        distribution_list_plotting = [(index, value) for index, value in distribution.items()]
+        table.setRowCount(len(distribution_list_sorted))
         table.setColumnCount(2)
 
         table.setHorizontalHeaderLabels(["Valor", "Frecuencia"])
         table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
         
-        for row, (index, value) in enumerate(distribution_list):
+        distribution_list_sorted.sort(reverse=True, key=lambda x: x[1])
+       
+        for row, (index, value) in enumerate(distribution_list_sorted):
             item_value = QTableWidgetItem(str(index))
             item_frequency = QTableWidgetItem(str(value))
             table.setItem(row, 0, item_value)
             table.setItem(row, 1, item_frequency)
         self.figure.clear()
-        print("va el plot_bar_graph")
-        self.plot_bar_graph(distribution_list)
+        #
+        self.plot_bar_graph(distribution_list_plotting)
         self.figure.show()
 
     def fill_table_with_correlation(self, table: QTableWidget, explore_data: exploreData, selected_column: str):

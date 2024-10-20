@@ -1,11 +1,6 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QMessageBox, QTextEdit, QScrollBar
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QMessageBox, QTextEdit, QProgressBar
 from PyQt6.QtCore import (
-  QObject,
-  QRunnable,
-  QThreadPool,
-  QTimer,
   pyqtSignal,
-  pyqtSlot,
   QThread
 )
 from PyQt6.QtCore import QPointF, Qt
@@ -71,6 +66,12 @@ class NetworkVisualizationMod(QWidget):
       
         layout.addWidget(self.figure)
 
+        # Barra de progreso
+        self.progress_bar = QProgressBar(self)
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setVisible(False)
+        layout.addWidget(self.progress_bar)
+
 
         self.is_fullscreen = False
         # layout para el dropdown
@@ -87,7 +88,7 @@ class NetworkVisualizationMod(QWidget):
         self.stats_text = QTextEdit(self)
         self.stats_text.setReadOnly(True)
         self.stats_text.verticalScrollBar()
-        
+        self.stats_text.setGeometry(100,50,100,50)
         layout.addWidget(self.stats_text)
 
         # layout para el boton
@@ -104,8 +105,10 @@ class NetworkVisualizationMod(QWidget):
         print("Computation complete.")
             
     def visualize_networks(self):
-
+        print("Button Pressed")
+        self.progress_bar.setVisible(True)
         self.worker = Worker(self.NetworkAnalysis, self.data_manager.get_data())
+        self.worker.update_progress.connect(self.progress_bar.setValue)
         self.worker.finished.connect(self.on_visualization_finished)
         self.worker.positions_ready.connect(self.set_graph)
         self.worker.positions_ready.connect(self.start_plotting_thread)
@@ -113,6 +116,7 @@ class NetworkVisualizationMod(QWidget):
 
     def start_plotting_thread(self, G: nx.Graph, positions):
         self.plot_worker = PlotWorker(G, positions)
+        self.plot_worker.update_progress.connect(self.progress_bar.setValue)
         self.plot_worker.plot_ready.connect(self.on_plotting_finished)
         self.plot_worker.start()
 
@@ -120,6 +124,7 @@ class NetworkVisualizationMod(QWidget):
         self.figure.clear()
         self.figure.addItem(graph_item)
         print("Plotting complete.")
+        self.progress_bar.setVisible(False)
 
     def set_graph(self, G: nx.Graph, _):
         self.Graph = G    
@@ -168,7 +173,9 @@ class NetworkVisualizationMod(QWidget):
                 
                 result = functionSelected(self.Graph)
                 print(f"{selected_operation}: {result}")
+                self.stats_text.setVisible(True)
                 self.stats_text.setPlainText(str(result))
+                
                 #ocultar el qtextEdit para mejor vis
             else:
                 QMessageBox.critical(self, "Error", f"Operación no soportada")
@@ -177,6 +184,7 @@ class NetworkVisualizationMod(QWidget):
 
 class Worker(QThread):
     positions_ready = pyqtSignal(object, object) #signature
+    update_progress = pyqtSignal(int)
 
     def __init__(self, network_analysis, data):
         super().__init__()
@@ -184,6 +192,7 @@ class Worker(QThread):
         self.data = data
 
     def run(self):
+        self.update_progress.emit(10)
         self.G = self.network_analysis.create_network_graph(self.data)
         num_nodes = self.G.number_of_nodes()
 
@@ -193,12 +202,13 @@ class Worker(QThread):
             positions = self.network_analysis.compute_medium_layout(self.G)
         else:
             positions = self.network_analysis.compute_small_layout(self.G)
-
+        self.update_progress.emit(50)
         self.positions_ready.emit(self.G, positions)
    
 
 class PlotWorker(QThread):
     plot_ready = pyqtSignal(object)
+    update_progress = pyqtSignal(int)
 
     def __init__(self, G: nx.Graph, positions):
         super().__init__()
@@ -206,6 +216,7 @@ class PlotWorker(QThread):
         self.positions = positions
 
     def run(self):
+        self.update_progress.emit(60) 
         nodes = list(self.G.nodes())
         edges = list(self.G.edges())
         weights = nx.get_edge_attributes(self.G, 'w')
@@ -243,5 +254,5 @@ class PlotWorker(QThread):
             useCache=False,
             pen=pg.mkPen(color='black', width=1)
         )
-
+        self.update_progress.emit(100)
         self.plot_ready.emit(graph_item)     

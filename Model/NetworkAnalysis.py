@@ -44,7 +44,7 @@ class NetworkAnalysis():
             adjustSizes=False,
             edgeWeightInfluence=1.0,
 
-            jitterTolerance=1.0,
+            jitterTolerance=4.0,
             barnesHutOptimize=True,
             barnesHutTheta=1.0,
             multiThreaded=False,

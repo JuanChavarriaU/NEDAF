@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import( QWidget, QVBoxLayout, QPushButton,
- QWidget, QCheckBox, QPushButton, QTextEdit, QLabel, QTableWidget, QTableWidgetItem
+ QWidget, QCheckBox, QPushButton, QMessageBox, QTableWidget, QTableWidgetItem
 )
 
 from Model.transformationData import TransformationData
@@ -25,20 +25,20 @@ class TransformationDataWindow(QWidget):
        # layout.addWidget(self.checkbox_duplicates)
        
 
-        self.status_label = QLabel("Cargando datos...")
+        #self.status_label = QLabel("Cargando datos...")
         
         #boton para aplicar transformaciones
         self.apply_button = QPushButton("Aplicar transformaciones")
         self.apply_button.clicked.connect(self.apply_transformations)
         self.enable_ui_elements(option=False)
         #viz data area
-        self.data_view = QTextEdit()
-        self.data_view.setReadOnly(True)
+        #self.data_view = QTextEdit()
+        #self.data_view.setReadOnly(True)
         
         layout.addWidget(self.checkbox_missing)
         layout.addWidget(self.checkbox_normalize)
         layout.addWidget(self.apply_button)
-        layout.addWidget(self.data_view)
+        #layout.addWidget(self.data_view)
         layout.addWidget(self.data_table)
 
         self.setLayout(layout)
@@ -47,7 +47,7 @@ class TransformationDataWindow(QWidget):
     def enable_ui_elements(self, option: bool):
         """Habilitar elementos de la interfaz cuando se cargue el DataFrame."""
         # Cambiar mensaje de estado
-        self.status_label.setText("Datos cargados")
+        #self.status_label.setText("Datos cargados")
         # Habilitar botón de aplicar transformaciones
         self.apply_button.setEnabled(option)
 
@@ -67,8 +67,9 @@ class TransformationDataWindow(QWidget):
                 tranformations.append("Datos normalizados")
         #transformation data, if we operate the dataframe, show it modified and updated with the set_data method of the data manager class  
         #simulacion de aplicar las transformaciones y actualizar vista de datos
-        transformed_data = "Datos transformados:\n\n" + "\n".join(tranformations)
-        self.data_view.setPlainText(transformed_data)
+        #transformed_data = "Datos transformados:\n\n" + "\n".join(tranformations)
+        #self.data_view.setPlainText(transformed_data)
+        QMessageBox.information(self, "Exito", f"Los datos se han transformado existosamente.")
         self.data_manager.set_data(self.transformation_data.get_data())
         self.fill_data_table(self.transformation_data.get_data())
 

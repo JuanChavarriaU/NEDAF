@@ -18,7 +18,6 @@ class DataManager(QObject):
         try:
             self.data = data
             self.data_loaded.emit()
-            #QMessageBox.StandardButton.Ok(self, "Exito", f"Datos cargados correctamente") no funciona
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to connect: {str(e)}")   
     

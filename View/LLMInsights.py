@@ -1,6 +1,11 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QTextEdit, QLineEdit
 import time as tm
 from Model import chatbot
+from PyQt6.QtCore import (
+  QObject,
+  pyqtSignal,
+  QThread
+)
 # from ViewModel import LLMBackend
 
 class LLMInsights(QWidget):
@@ -41,6 +46,25 @@ class LLMInsights(QWidget):
 
     def process_query(self, query):
         # Implement your LLM logic here
-        response = chatbot.answer(query)
-        
-        self.text_area.append(f"NEDAF Assistant: {response}\n")    
+        self.worker = workerBot(query)
+        self.worker.response_ready.connect(self.response_query)
+        self.worker.start()
+
+    def response_query(self, response):
+
+        self.text_area.append(f"NEDAF Assistant: {response}\n")      
+
+
+
+class workerBot(QThread):
+    response_ready = pyqtSignal(object)
+
+    def __init__(self, query) -> None:
+        super().__init__() 
+        self.query = query         
+
+
+    def run(self):
+        response = chatbot.answer(self.query)
+
+        self.response_ready.emit(response)
